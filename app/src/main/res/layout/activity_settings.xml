@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#FF1A1A2E"
+    android:padding="24dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Настройки"
+        android:textColor="#FFFFFF"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:layout_marginBottom="32dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="ПАРОЛЬ"
+        android:textColor="#AAAAAA"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp" />
+
+    <EditText
+        android:id="@+id/passwordEditText"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:hint="Введите пароль"
+        android:inputType="textPassword"
+        android:textColor="#FFFFFF"
+        android:textColorHint="#888888"
+        android:background="@drawable/edit_text_background"
+        android:padding="16dp"
+        android:textSize="16sp"
+        android:layout_marginBottom="16dp" />
+
+    <Button
+        android:id="@+id/savePasswordButton"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:text="СОХРАНИТЬ ПАРОЛЬ"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:backgroundTint="#FF2196F3"
+        android:textColor="#FFFFFF"
+        android:layout_marginBottom="32dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="СТАРТОВОЕ ВРЕМЯ"
+        android:textColor="#AAAAAA"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginBottom="8dp">
+
+        <EditText
+            android:id="@+id/hoursEditText"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_weight="1"
+            android:hint="Часы"
+            android:inputType="number"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#888888"
+            android:background="@drawable/edit_text_background"
+            android:gravity="center"
+            android:textSize="18sp"
+            android:layout_marginEnd="8dp" />
+
+        <EditText
+            android:id="@+id/minutesEditText"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_weight="1"
+            android:hint="Мин"
+            android:inputType="number"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#888888"
+            android:background="@drawable/edit_text_background"
+            android:gravity="center"
+            android:textSize="18sp"
+            android:layout_marginEnd="8dp" />
+
+        <EditText
+            android:id="@+id/secondsEditText"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_weight="1"
+            android:hint="Сек"
+            android:inputType="number"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#888888"
+            android:background="@drawable/edit_text_background"
+            android:gravity="center"
+            android:textSize="18sp" />
+
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Формат: часы : минуты : секунды"
+        android:textColor="#888888"
+        android:textSize="12sp"
+        android:layout_marginBottom="16dp" />
+
+    <Button
+        android:id="@+id/saveTimeButton"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:text="СОХРАНИТЬ ВРЕМЯ"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:backgroundTint="#FF4CAF50"
+        android:textColor="#FFFFFF" />
+
+</LinearLayout>
