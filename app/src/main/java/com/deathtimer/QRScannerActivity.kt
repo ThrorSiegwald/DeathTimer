@@ -1,11 +1,14 @@
 package com.deathtimer
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
@@ -27,7 +30,22 @@ class QRScannerActivity : AppCompatActivity() {
     private lateinit var cancelButton: Button
     private lateinit var cameraExecutor: ExecutorService
 
+    private val scanner = BarcodeScanning.getClient()
     private var scannedSeconds = 0
+
+    // 1. Создаем лаунчер для запроса разрешения (современный способ AndroidX)
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            // Разрешение получено, запускаем камеру
+            startCamera()
+        } else {
+            // Разрешение отклонено, сообщаем пользователю и закрываем экран
+            Toast.makeText(this, "Для сканирования QR необходимо разрешение на использование камеры", Toast.LENGTH_LONG).show()
+            finish()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,18 +65,37 @@ class QRScannerActivity : AppCompatActivity() {
         addButton.setOnClickListener { addTime() }
         cancelButton.setOnClickListener { finish() }
 
-        startCamera()
+        // 2. Вместо прямого вызова startCamera(), сначала проверяем разрешения
+        checkCameraPermission()
+    }
+
+    // 3. Функция проверки наличия разрешения
+    private fun checkCameraPermission() {
+        when {
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                // Разрешение уже есть (например, пользователь дал его ранее)
+                startCamera()
+            }
+            else -> {
+                // Разрешения нет, запрашиваем его у пользователя
+                requestPermissionLauncher.launch(Manifest.permission.CAMERA)
+            }
+        }
     }
 
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+
         cameraProviderFuture.addListener({
             val cameraProvider = cameraProviderFuture.get()
 
             val preview = Preview.Builder()
                 .build()
                 .also {
-                    it.surfaceProvider = cameraPreview.surfaceProvider
+                    it.setSurfaceProvider(cameraPreview.surfaceProvider)
                 }
 
             val imageAnalysis = ImageAnalysis.Builder()
@@ -94,7 +131,6 @@ class QRScannerActivity : AppCompatActivity() {
     }
 
     private fun processImage(image: InputImage, imageProxy: androidx.camera.core.ImageProxy) {
-        val scanner = BarcodeScanning.getClient()
         scanner.process(image)
             .addOnSuccessListener { barcodes ->
                 for (barcode in barcodes) {
@@ -170,5 +206,6 @@ class QRScannerActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         cameraExecutor.shutdown()
+        scanner.close()
     }
 }

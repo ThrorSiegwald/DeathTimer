@@ -47,6 +47,17 @@
         android:textStyle="bold"
         android:backgroundTint="#FF2196F3"
         android:textColor="#FFFFFF"
+        android:layout_marginBottom="12dp" />
+
+    <Button
+        android:id="@+id/changePasswordButton"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:text="СМЕНИТЬ ПАРОЛЬ"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:backgroundTint="#FFFF9800"
+        android:textColor="#FFFFFF"
         android:layout_marginBottom="32dp" />
 
     <TextView

@@ -48,18 +48,6 @@
             android:layout_marginBottom="12dp" />
 
         <Button
-            android:id="@+id/stopButton"
-            android:layout_width="250dp"
-            android:layout_height="56dp"
-            android:text="СТОП"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:backgroundTint="#FFFF5722"
-            android:textColor="#FFFFFF"
-            android:enabled="false"
-            android:layout_marginBottom="12dp" />
-
-        <Button
             android:id="@+id/resetButton"
             android:layout_width="250dp"
             android:layout_height="56dp"
@@ -113,7 +101,18 @@
             android:textSize="64sp"
             android:textStyle="bold"
             android:fontFamily="monospace"
-            android:gravity="center" />
+            android:gravity="center"
+            android:layout_marginBottom="32dp" />
+
+        <Button
+            android:id="@+id/returnButton"
+            android:layout_width="250dp"
+            android:layout_height="56dp"
+            android:text="НА ГЛАВНЫЙ ЭКРАН"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:backgroundTint="#FF9E9E9E"
+            android:textColor="#FFFFFF" />
 
     </LinearLayout>
 

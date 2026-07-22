@@ -22,16 +22,17 @@ class MainActivity : AppCompatActivity() {
     private lateinit var statusTextView: TextView
     private lateinit var deathMessageTextView: TextView
     private lateinit var startButton: Button
-    private lateinit var stopButton: Button
     private lateinit var resetButton: Button
     private lateinit var qrScanButton: Button
     private lateinit var settingsButton: Button
+    private lateinit var returnButton: Button
     private lateinit var expiredContainer: LinearLayout
     private lateinit var timerContainer: LinearLayout
 
     private var countdownThread: Thread? = null
     @Volatile
     private var isRunning = false
+    private var expiredOverlayDismissed = false
 
     companion object {
         private const val CAMERA_PERMISSION_CODE = 100
@@ -58,18 +59,18 @@ class MainActivity : AppCompatActivity() {
         statusTextView = findViewById(R.id.statusTextView)
         deathMessageTextView = findViewById(R.id.deathMessageTextView)
         startButton = findViewById(R.id.startButton)
-        stopButton = findViewById(R.id.stopButton)
         resetButton = findViewById(R.id.resetButton)
         qrScanButton = findViewById(R.id.qrScanButton)
         settingsButton = findViewById(R.id.settingsButton)
+        returnButton = findViewById(R.id.returnButton)
         expiredContainer = findViewById(R.id.expiredContainer)
         timerContainer = findViewById(R.id.timerContainer)
 
         startButton.setOnClickListener { startTimer() }
-        stopButton.setOnClickListener { stopTimer() }
         resetButton.setOnClickListener { resetTimer() }
         qrScanButton.setOnClickListener { openQRScanner() }
         settingsButton.setOnClickListener { openSettings() }
+        returnButton.setOnClickListener { returnToMain() }
 
         updateUI()
     }
@@ -80,7 +81,8 @@ class MainActivity : AppCompatActivity() {
                 "dd.MM.yyyy HH:mm:ss", Locale.getDefault()
             ).format(Date())
             showExpiredScreen(date)
-        } else if (PreferenceManager.isExpired(this)) {
+            expiredOverlayDismissed = false
+        } else if (PreferenceManager.isExpired(this) && !expiredOverlayDismissed) {
             val date = SimpleDateFormat(
                 "dd.MM.yyyy HH:mm:ss", Locale.getDefault()
             ).format(Date(PreferenceManager.getExpiryTime(this)))
@@ -97,9 +99,15 @@ class MainActivity : AppCompatActivity() {
         deathMessageTextView.text = "ТЫ МЕРТВ"
         statusTextView.text = "Дата смерти: $date"
         startButton.isEnabled = false
-        stopButton.isEnabled = false
         resetButton.isEnabled = false
         qrScanButton.isEnabled = false
+    }
+
+    private fun returnToMain() {
+        expiredContainer.visibility = android.view.View.GONE
+        timerContainer.alpha = 1.0f
+        expiredOverlayDismissed = true
+        updateUI()
     }
 
     private fun startTimer() {
@@ -165,26 +173,11 @@ class MainActivity : AppCompatActivity() {
         }.apply { start() }
     }
 
-    private fun stopTimer() {
-        if (!PreferenceManager.isPasswordSet(this)) {
-            Toast.makeText(this, "Невозможно без пароля", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        val dialog = PasswordDialogFragment.newInstance { success ->
-            if (success) {
-                performStop()
-            } else {
-                Toast.makeText(this, "Неверный пароль", Toast.LENGTH_SHORT).show()
-            }
-        }
-        dialog.show(supportFragmentManager, "password")
-    }
-
     private fun performStop() {
         isRunning = false
         countdownThread?.interrupt()
         countdownThread = null
+        expiredOverlayDismissed = false
 
         val serviceIntent = Intent(this, TimerService::class.java).apply {
             action = TimerService.ACTION_STOP
@@ -207,8 +200,6 @@ class MainActivity : AppCompatActivity() {
         val dialog = PasswordDialogFragment.newInstance { success ->
             if (success) {
                 performStop()
-                timerTextView.text = "00:00:00"
-                statusTextView.text = "Таймер не запущен"
             } else {
                 Toast.makeText(this, "Неверный пароль", Toast.LENGTH_SHORT).show()
             }
@@ -232,12 +223,15 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateUI() {
         if (PreferenceManager.isExpired(this)) {
-            timerContainer.alpha = 0.3f
-            expiredContainer.visibility = android.view.View.VISIBLE
+            timerTextView.text = "00:00:00"
+            statusTextView.text = "МЕРТВ"
+            statusTextView.setTextColor(ContextCompat.getColor(this, R.color.red))
+            timerContainer.alpha = 1.0f
+            expiredContainer.visibility = android.view.View.GONE
             startButton.isEnabled = false
-            stopButton.isEnabled = false
-            resetButton.isEnabled = false
+            resetButton.isEnabled = true
             qrScanButton.isEnabled = false
+            settingsButton.isEnabled = true
         } else if (PreferenceManager.isRunning(this)) {
             val remaining = PreferenceManager.getRemainingSeconds(this)
             val hours = remaining / 3600
@@ -246,15 +240,16 @@ class MainActivity : AppCompatActivity() {
             timerTextView.text = String.format("%02d:%02d:%02d", hours, minutes, seconds)
             statusTextView.text = "До конца осталось..."
             startButton.isEnabled = false
-            stopButton.isEnabled = true
             resetButton.isEnabled = true
             qrScanButton.isEnabled = true
             settingsButton.isEnabled = false
+            expiredContainer.visibility = android.view.View.GONE
+            timerContainer.alpha = 1.0f
         } else {
             timerTextView.text = "00:00:00"
             statusTextView.text = "Таймер не запущен"
+            statusTextView.setTextColor(ContextCompat.getColor(this, R.color.white))
             startButton.isEnabled = true
-            stopButton.isEnabled = false
             resetButton.isEnabled = false
             qrScanButton.isEnabled = false
             settingsButton.isEnabled = true
