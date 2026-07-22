@@ -22,7 +22,7 @@ class SettingsActivity : AppCompatActivity() {
         setContentView(R.layout.activity_settings)
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.title = "Настройки"
+        supportActionBar?.title = getString(R.string.settings_title)
 
         passwordEditText = findViewById(R.id.passwordEditText)
         hoursEditText = findViewById(R.id.hoursEditText)
@@ -43,9 +43,9 @@ class SettingsActivity : AppCompatActivity() {
 
     private fun loadCurrentSettings() {
         if (PreferenceManager.isPasswordSet(this)) {
-            passwordEditText.hint = "Пароль установлен (введите новый)"
+            passwordEditText.hint = getString(R.string.password_set_hint)
         } else {
-            passwordEditText.hint = "Введите пароль"
+            passwordEditText.hint = getString(R.string.enter_password)
         }
 
         val countdownSeconds = PreferenceManager.getCountdownTime(this)
@@ -61,7 +61,7 @@ class SettingsActivity : AppCompatActivity() {
     private fun savePassword() {
         val newPassword = passwordEditText.text.toString().trim()
         if (newPassword.isEmpty()) {
-            Toast.makeText(this, "Введите пароль", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.enter_password, Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -69,31 +69,31 @@ class SettingsActivity : AppCompatActivity() {
             showCurrentPasswordDialog(newPassword)
         } else {
             PreferenceManager.savePassword(this, newPassword)
-            Toast.makeText(this, "Пароль сохранён", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.password_saved, Toast.LENGTH_SHORT).show()
             passwordEditText.text.clear()
         }
     }
 
     private fun showCurrentPasswordDialog(newPassword: String) {
         val editText = EditText(this).apply {
-            hint = "Введите текущий пароль"
+            hint = getString(R.string.enter_current_password)
             setPadding(60, 40, 60, 20)
         }
 
         AlertDialog.Builder(this)
-            .setTitle("Требуется текущий пароль")
+            .setTitle(R.string.current_password_required_title)
             .setView(editText)
-            .setPositiveButton("OK") { _, _ ->
+            .setPositiveButton(R.string.btn_ok) { _, _ ->
                 val currentPassword = editText.text.toString()
                 if (PreferenceManager.checkPassword(this, currentPassword)) {
                     PreferenceManager.savePassword(this, newPassword)
-                    Toast.makeText(this, "Пароль обновлён", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, R.string.password_updated, Toast.LENGTH_SHORT).show()
                     passwordEditText.text.clear()
                 } else {
-                    Toast.makeText(this, "Неверный текущий пароль", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, R.string.current_password_wrong, Toast.LENGTH_SHORT).show()
                 }
             }
-            .setNegativeButton("Отмена", null)
+            .setNegativeButton(R.string.btn_cancel_dialog, null)
             .show()
     }
 
@@ -113,19 +113,19 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         val currentPasswordInput = EditText(this).apply {
-            hint = "Текущий пароль"
+            hint = getString(R.string.current_password_hint)
             inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
             setPadding(0, 20, 0, 20)
         }
 
         val newPasswordInput = EditText(this).apply {
-            hint = "Новый пароль"
+            hint = getString(R.string.new_password_hint)
             inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
             setPadding(0, 20, 0, 20)
         }
 
         val confirmPasswordInput = EditText(this).apply {
-            hint = "Подтвердите новый пароль"
+            hint = getString(R.string.confirm_password_hint)
             inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
             setPadding(0, 20, 0, 20)
         }
@@ -135,32 +135,32 @@ class SettingsActivity : AppCompatActivity() {
         layout.addView(confirmPasswordInput)
 
         AlertDialog.Builder(this)
-            .setTitle("Смена пароля")
+            .setTitle(R.string.change_password_title)
             .setView(layout)
-            .setPositiveButton("Сменить") { _, _ ->
+            .setPositiveButton(R.string.btn_change) { _, _ ->
                 val currentPassword = currentPasswordInput.text.toString()
                 val newPassword = newPasswordInput.text.toString()
                 val confirmPassword = confirmPasswordInput.text.toString()
 
                 if (!PreferenceManager.checkPassword(this, currentPassword)) {
-                    Toast.makeText(this, "Неверный текущий пароль", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, R.string.current_password_wrong, Toast.LENGTH_SHORT).show()
                     return@setPositiveButton
                 }
 
                 if (newPassword.isEmpty()) {
-                    Toast.makeText(this, "Введите новый пароль", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, R.string.new_password_hint, Toast.LENGTH_SHORT).show()
                     return@setPositiveButton
                 }
 
                 if (newPassword != confirmPassword) {
-                    Toast.makeText(this, "Пароли не совпадают", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, R.string.passwords_not_match, Toast.LENGTH_SHORT).show()
                     return@setPositiveButton
                 }
 
                 PreferenceManager.savePassword(this, newPassword)
-                Toast.makeText(this, "Пароль успешно изменён", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.password_changed, Toast.LENGTH_SHORT).show()
             }
-            .setNegativeButton("Отмена", null)
+            .setNegativeButton(R.string.btn_cancel_dialog, null)
             .show()
     }
 
@@ -171,12 +171,12 @@ class SettingsActivity : AppCompatActivity() {
 
         val totalSeconds = hours * 3600 + minutes * 60 + seconds
         if (totalSeconds <= 0) {
-            Toast.makeText(this, "Установите время больше 0", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.time_must_be_positive, Toast.LENGTH_SHORT).show()
             return
         }
 
         PreferenceManager.saveCountdownTime(this, totalSeconds)
-        Toast.makeText(this, "Время сохранено: ${hours}ч ${minutes}м ${seconds}с", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, getString(R.string.timer_format_saved, hours, minutes, seconds), Toast.LENGTH_SHORT).show()
     }
 
     override fun onSupportNavigateUp(): Boolean {

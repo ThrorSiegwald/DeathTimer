@@ -9,9 +9,12 @@ import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.OptIn
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
@@ -33,16 +36,13 @@ class QRScannerActivity : AppCompatActivity() {
     private val scanner = BarcodeScanning.getClient()
     private var scannedSeconds = 0
 
-    // 1. Создаем лаунчер для запроса разрешения (современный способ AndroidX)
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
         if (isGranted) {
-            // Разрешение получено, запускаем камеру
             startCamera()
         } else {
-            // Разрешение отклонено, сообщаем пользователю и закрываем экран
-            Toast.makeText(this, "Для сканирования QR необходимо разрешение на использование камеры", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, R.string.timer_not_started, Toast.LENGTH_LONG).show()
             finish()
         }
     }
@@ -52,7 +52,7 @@ class QRScannerActivity : AppCompatActivity() {
         setContentView(R.layout.activity_qr_scanner)
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.title = "Сканирование QR"
+        supportActionBar?.title = getString(R.string.qr_scan_title)
 
         cameraPreview = findViewById(R.id.cameraPreview)
         resultTextView = findViewById(R.id.resultTextView)
@@ -65,22 +65,18 @@ class QRScannerActivity : AppCompatActivity() {
         addButton.setOnClickListener { addTime() }
         cancelButton.setOnClickListener { finish() }
 
-        // 2. Вместо прямого вызова startCamera(), сначала проверяем разрешения
         checkCameraPermission()
     }
 
-    // 3. Функция проверки наличия разрешения
     private fun checkCameraPermission() {
         when {
             ContextCompat.checkSelfPermission(
                 this,
                 Manifest.permission.CAMERA
             ) == PackageManager.PERMISSION_GRANTED -> {
-                // Разрешение уже есть (например, пользователь дал его ранее)
                 startCamera()
             }
             else -> {
-                // Разрешения нет, запрашиваем его у пользователя
                 requestPermissionLauncher.launch(Manifest.permission.CAMERA)
             }
         }
@@ -103,16 +99,7 @@ class QRScannerActivity : AppCompatActivity() {
                 .build()
                 .also {
                     it.setAnalyzer(cameraExecutor) { imageProxy ->
-                        val mediaImage = imageProxy.image
-                        if (mediaImage != null) {
-                            val image = InputImage.fromMediaImage(
-                                mediaImage,
-                                imageProxy.imageInfo.rotationDegrees
-                            )
-                            processImage(image, imageProxy)
-                        } else {
-                            imageProxy.close()
-                        }
+                        processImageProxy(imageProxy)
                     }
                 }
 
@@ -130,23 +117,33 @@ class QRScannerActivity : AppCompatActivity() {
         }, ContextCompat.getMainExecutor(this))
     }
 
-    private fun processImage(image: InputImage, imageProxy: androidx.camera.core.ImageProxy) {
-        scanner.process(image)
-            .addOnSuccessListener { barcodes ->
-                for (barcode in barcodes) {
-                    if (barcode.valueType == Barcode.TYPE_TEXT) {
-                        val text = barcode.rawValue ?: ""
-                        parseQRCode(text)
-                        imageProxy.close()
-                        return@addOnSuccessListener
+    @OptIn(ExperimentalGetImage::class)
+    private fun processImageProxy(imageProxy: ImageProxy) {
+        val mediaImage = imageProxy.image
+        if (mediaImage != null) {
+            val image = InputImage.fromMediaImage(
+                mediaImage,
+                imageProxy.imageInfo.rotationDegrees
+            )
+            scanner.process(image)
+                .addOnSuccessListener { barcodes ->
+                    for (barcode in barcodes) {
+                        if (barcode.valueType == Barcode.TYPE_TEXT) {
+                            val text = barcode.rawValue ?: ""
+                            parseQRCode(text)
+                            imageProxy.close()
+                            return@addOnSuccessListener
+                        }
                     }
+                    imageProxy.close()
                 }
-                imageProxy.close()
-            }
-            .addOnFailureListener { e ->
-                Log.e("QRScanner", "Barcode scanning failed", e)
-                imageProxy.close()
-            }
+                .addOnFailureListener { e ->
+                    Log.e("QRScanner", "Barcode scanning failed", e)
+                    imageProxy.close()
+                }
+        } else {
+            imageProxy.close()
+        }
     }
 
     private fun parseQRCode(text: String) {
@@ -157,20 +154,20 @@ class QRScannerActivity : AppCompatActivity() {
             if (seconds != null && seconds > 0) {
                 scannedSeconds = seconds
                 runOnUiThread {
-                    resultTextView.text = "Найдено: +${seconds} секунд"
+                    resultTextView.text = getString(R.string.qr_found, seconds)
                     resultTextView.setTextColor(ContextCompat.getColor(this, R.color.green))
                     addButton.isEnabled = true
                 }
             } else {
                 runOnUiThread {
-                    resultTextView.text = "Неверный формат: $trimmed"
+                    resultTextView.text = getString(R.string.qr_wrong_format, trimmed)
                     resultTextView.setTextColor(ContextCompat.getColor(this, R.color.red))
                     addButton.isEnabled = false
                 }
             }
         } else {
             runOnUiThread {
-                resultTextView.text = "Неверный QR: $trimmed"
+                resultTextView.text = getString(R.string.qr_wrong_code, trimmed)
                 resultTextView.setTextColor(ContextCompat.getColor(this, R.color.red))
                 addButton.isEnabled = false
             }
@@ -181,7 +178,7 @@ class QRScannerActivity : AppCompatActivity() {
         if (scannedSeconds <= 0) return
 
         if (!PreferenceManager.isRunning(this)) {
-            Toast.makeText(this, "Сначала запустите таймер", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.timer_not_started_toast, Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -194,7 +191,7 @@ class QRScannerActivity : AppCompatActivity() {
         val remaining = PreferenceManager.getRemainingSeconds(this) + scannedSeconds
         PreferenceManager.saveRemainingSeconds(this, remaining)
 
-        Toast.makeText(this, "+${scannedSeconds} секунд добавлено", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, getString(R.string.time_added, scannedSeconds), Toast.LENGTH_SHORT).show()
         finish()
     }
 

@@ -22,7 +22,7 @@ class PasswordDialogFragment : DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val context = requireContext()
         val editText = EditText(context).apply {
-            hint = "Введите пароль"
+            hint = getString(R.string.password_confirm_hint)
             setPadding(60, 40, 60, 20)
         }
 
@@ -32,18 +32,18 @@ class PasswordDialogFragment : DialogFragment() {
         }
 
         return AlertDialog.Builder(context)
-            .setTitle("Подтверждение")
+            .setTitle(R.string.password_confirm_title)
             .setView(container)
-            .setPositiveButton("OK") { _, _ ->
+            .setPositiveButton(R.string.btn_ok) { _, _ ->
                 val password = editText.text.toString()
                 if (PreferenceManager.checkPassword(context, password)) {
                     onComplete?.invoke(true)
                 } else {
-                    Toast.makeText(context, "Неверный пароль", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, R.string.password_wrong, Toast.LENGTH_SHORT).show()
                     onComplete?.invoke(false)
                 }
             }
-            .setNegativeButton("Отмена") { _, _ ->
+            .setNegativeButton(R.string.btn_cancel_dialog) { _, _ ->
                 onComplete?.invoke(false)
             }
             .create()

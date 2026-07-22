@@ -34,6 +34,8 @@ class MainActivity : AppCompatActivity() {
     private var isRunning = false
     private var expiredOverlayDismissed = false
 
+    private val dateFormat = SimpleDateFormat("dd.MM.yyyy HH:mm:ss", Locale.getDefault())
+
     companion object {
         private const val CAMERA_PERMISSION_CODE = 100
         private const val NOTIFICATION_PERMISSION_CODE = 101
@@ -77,15 +79,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun checkExpiredState(intent: Intent?) {
         if (intent?.getBooleanExtra("show_expired", false) == true) {
-            val date = intent.getStringExtra("expiry_date") ?: SimpleDateFormat(
-                "dd.MM.yyyy HH:mm:ss", Locale.getDefault()
-            ).format(Date())
+            val date = intent.getStringExtra("expiry_date") ?: dateFormat.format(Date())
             showExpiredScreen(date)
             expiredOverlayDismissed = false
         } else if (PreferenceManager.isExpired(this) && !expiredOverlayDismissed) {
-            val date = SimpleDateFormat(
-                "dd.MM.yyyy HH:mm:ss", Locale.getDefault()
-            ).format(Date(PreferenceManager.getExpiryTime(this)))
+            val date = dateFormat.format(Date(PreferenceManager.getExpiryTime(this)))
             showExpiredScreen(date)
         } else if (PreferenceManager.isRunning(this)) {
             isRunning = true
@@ -96,8 +94,8 @@ class MainActivity : AppCompatActivity() {
     private fun showExpiredScreen(date: String) {
         timerContainer.alpha = 0.3f
         expiredContainer.visibility = android.view.View.VISIBLE
-        deathMessageTextView.text = "ТЫ МЕРТВ"
-        statusTextView.text = "Дата смерти: $date"
+        deathMessageTextView.text = getString(R.string.death_message)
+        statusTextView.text = getString(R.string.death_date_format, date)
         startButton.isEnabled = false
         resetButton.isEnabled = false
         qrScanButton.isEnabled = false
@@ -112,7 +110,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun startTimer() {
         if (!PreferenceManager.isPasswordSet(this)) {
-            Toast.makeText(this, "Сначала задайте пароль в настройках", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, R.string.password_required, Toast.LENGTH_LONG).show()
             openSettings()
             return
         }
@@ -145,10 +143,7 @@ class MainActivity : AppCompatActivity() {
                     PreferenceManager.setRunning(this, false)
                     isRunning = false
                     runOnUiThread {
-                        showExpiredScreen(
-                            SimpleDateFormat("dd.MM.yyyy HH:mm:ss", Locale.getDefault())
-                                .format(Date())
-                        )
+                        showExpiredScreen(dateFormat.format(Date()))
                     }
                     break
                 }
@@ -157,16 +152,16 @@ class MainActivity : AppCompatActivity() {
                 val hours = remaining / 3600
                 val minutes = (remaining % 3600) / 60
                 val seconds = remaining % 60
-                val timeString = String.format("%02d:%02d:%02d", hours, minutes, seconds)
+                val timeString = String.format(Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, seconds)
 
                 runOnUiThread {
                     timerTextView.text = timeString
-                    statusTextView.text = "До конца осталось..."
+                    statusTextView.text = getString(R.string.time_remaining)
                 }
 
                 try {
                     Thread.sleep(1000)
-                } catch (e: InterruptedException) {
+                } catch (_: InterruptedException) {
                     break
                 }
             }
@@ -193,7 +188,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun resetTimer() {
         if (!PreferenceManager.isPasswordSet(this)) {
-            Toast.makeText(this, "Невозможно без пароля", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.password_not_possible, Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -201,7 +196,7 @@ class MainActivity : AppCompatActivity() {
             if (success) {
                 performStop()
             } else {
-                Toast.makeText(this, "Неверный пароль", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.password_wrong, Toast.LENGTH_SHORT).show()
             }
         }
         dialog.show(supportFragmentManager, "password")
@@ -223,8 +218,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateUI() {
         if (PreferenceManager.isExpired(this)) {
-            timerTextView.text = "00:00:00"
-            statusTextView.text = "МЕРТВ"
+            timerTextView.text = getString(R.string.timer_default_time)
+            statusTextView.text = getString(R.string.death_status)
             statusTextView.setTextColor(ContextCompat.getColor(this, R.color.red))
             timerContainer.alpha = 1.0f
             expiredContainer.visibility = android.view.View.GONE
@@ -237,8 +232,8 @@ class MainActivity : AppCompatActivity() {
             val hours = remaining / 3600
             val minutes = (remaining % 3600) / 60
             val seconds = remaining % 60
-            timerTextView.text = String.format("%02d:%02d:%02d", hours, minutes, seconds)
-            statusTextView.text = "До конца осталось..."
+            timerTextView.text = String.format(Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, seconds)
+            statusTextView.text = getString(R.string.time_remaining)
             startButton.isEnabled = false
             resetButton.isEnabled = true
             qrScanButton.isEnabled = true
@@ -246,8 +241,8 @@ class MainActivity : AppCompatActivity() {
             expiredContainer.visibility = android.view.View.GONE
             timerContainer.alpha = 1.0f
         } else {
-            timerTextView.text = "00:00:00"
-            statusTextView.text = "Таймер не запущен"
+            timerTextView.text = getString(R.string.timer_default_time)
+            statusTextView.text = getString(R.string.timer_not_started)
             statusTextView.setTextColor(ContextCompat.getColor(this, R.color.white))
             startButton.isEnabled = true
             resetButton.isEnabled = false

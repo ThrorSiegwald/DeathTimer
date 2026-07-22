@@ -2,6 +2,7 @@ package com.deathtimer
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.core.content.edit
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 
@@ -32,10 +33,10 @@ object PreferenceManager {
     }
 
     fun savePassword(context: Context, password: String) {
-        getEncryptedPrefs(context).edit()
-            .putString(KEY_PASSWORD, password)
-            .putBoolean(KEY_PASSWORD_SET, true)
-            .apply()
+        getEncryptedPrefs(context).edit {
+            putString(KEY_PASSWORD, password)
+            putBoolean(KEY_PASSWORD_SET, true)
+        }
     }
 
     fun checkPassword(context: Context, password: String): Boolean {
@@ -48,9 +49,9 @@ object PreferenceManager {
     }
 
     fun saveCountdownTime(context: Context, seconds: Int) {
-        getEncryptedPrefs(context).edit()
-            .putInt(KEY_COUNTDOWN_SECONDS, seconds)
-            .apply()
+        getEncryptedPrefs(context).edit {
+            putInt(KEY_COUNTDOWN_SECONDS, seconds)
+        }
     }
 
     fun getCountdownTime(context: Context): Int {
@@ -58,9 +59,9 @@ object PreferenceManager {
     }
 
     fun setRunning(context: Context, running: Boolean) {
-        getEncryptedPrefs(context).edit()
-            .putBoolean(KEY_IS_RUNNING, running)
-            .apply()
+        getEncryptedPrefs(context).edit {
+            putBoolean(KEY_IS_RUNNING, running)
+        }
     }
 
     fun isRunning(context: Context): Boolean {
@@ -68,9 +69,9 @@ object PreferenceManager {
     }
 
     fun saveRemainingSeconds(context: Context, seconds: Long) {
-        getEncryptedPrefs(context).edit()
-            .putLong(KEY_REMAINING_SECONDS, seconds)
-            .apply()
+        getEncryptedPrefs(context).edit {
+            putLong(KEY_REMAINING_SECONDS, seconds)
+        }
     }
 
     fun getRemainingSeconds(context: Context): Long {
@@ -78,9 +79,9 @@ object PreferenceManager {
     }
 
     fun saveStartTime(context: Context, time: Long) {
-        getEncryptedPrefs(context).edit()
-            .putLong(KEY_START_TIME, time)
-            .apply()
+        getEncryptedPrefs(context).edit {
+            putLong(KEY_START_TIME, time)
+        }
     }
 
     fun getStartTime(context: Context): Long {
@@ -88,19 +89,13 @@ object PreferenceManager {
     }
 
     fun setExpired(context: Context, expired: Boolean) {
-        getEncryptedPrefs(context).edit()
-            .putBoolean(KEY_IS_EXPIRED, expired)
-            .apply()
+        getEncryptedPrefs(context).edit {
+            putBoolean(KEY_IS_EXPIRED, expired)
+        }
     }
 
     fun isExpired(context: Context): Boolean {
         return getEncryptedPrefs(context).getBoolean(KEY_IS_EXPIRED, false)
-    }
-
-    fun saveExpiryTime(context: Context, time: Long) {
-        getEncryptedPrefs(context).edit()
-            .putLong(KEY_EXPIRY_TIME, time)
-            .apply()
     }
 
     fun getExpiryTime(context: Context): Long {

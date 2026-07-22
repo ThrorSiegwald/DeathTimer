@@ -2,8 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="#FF000000">
+    android:orientation="vertical">
 
     <androidx.camera.view.PreviewView
         android:id="@+id/cameraPreview"
@@ -23,7 +22,7 @@
             android:id="@+id/resultTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Наведите камеру на QR-код"
+            android:text="@string/qr_hint"
             android:textColor="#FFFFFF"
             android:textSize="18sp"
             android:textStyle="bold"
@@ -38,10 +37,11 @@
 
             <Button
                 android:id="@+id/addButton"
+                style="?android:attr/buttonBarButtonStyle"
                 android:layout_width="0dp"
                 android:layout_height="56dp"
                 android:layout_weight="1"
-                android:text="ДОБАВИТЬ"
+                android:text="@string/btn_add"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:backgroundTint="#FF4CAF50"
@@ -51,10 +51,11 @@
 
             <Button
                 android:id="@+id/cancelButton"
+                style="?android:attr/buttonBarButtonStyle"
                 android:layout_width="0dp"
                 android:layout_height="56dp"
                 android:layout_weight="1"
-                android:text="ОТМЕНА"
+                android:text="@string/btn_cancel"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:backgroundTint="#FF757575"

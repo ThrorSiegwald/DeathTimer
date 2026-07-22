@@ -1,14 +1,10 @@
 package com.deathtimer
 
-import android.app.Notification
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
-import android.content.Context
 import android.content.Intent
-import android.media.AudioAttributes
 import android.media.RingtoneManager
-import android.net.Uri
 import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
@@ -26,6 +22,8 @@ class TimerService : Service() {
     private var countdownThread: Thread? = null
     @Volatile
     private var isServiceRunning = false
+
+    private val dateFormat = SimpleDateFormat("dd.MM.yyyy HH:mm:ss", Locale.getDefault())
 
     companion object {
         const val NOTIFICATION_ID = 1001
@@ -71,14 +69,13 @@ class TimerService : Service() {
 
         countdownThread = Thread {
             while (isServiceRunning && !PreferenceManager.isExpired(this@TimerService)) {
-                val remaining = PreferenceManager.getRemainingSeconds(this@TimerService)
                 val startTime = PreferenceManager.getStartTime(this@TimerService)
 
                 if (startTime == 0L) {
                     PreferenceManager.saveStartTime(this@TimerService, System.currentTimeMillis())
                 }
 
-                val elapsed = (System.currentTimeMillis() - (PreferenceManager.getStartTime(this@TimerService))) / 1000
+                val elapsed = (System.currentTimeMillis() - PreferenceManager.getStartTime(this@TimerService)) / 1000
                 val currentRemaining = PreferenceManager.getCountdownTime(this@TimerService) - elapsed
 
                 if (currentRemaining <= 0) {
@@ -94,7 +91,7 @@ class TimerService : Service() {
 
                 try {
                     Thread.sleep(1000)
-                } catch (e: InterruptedException) {
+                } catch (_: InterruptedException) {
                     break
                 }
             }
@@ -102,7 +99,6 @@ class TimerService : Service() {
     }
 
     private fun handleExpiration() {
-        val dateFormat = SimpleDateFormat("dd.MM.yyyy HH:mm:ss", Locale.getDefault())
         val expiryDate = dateFormat.format(Date())
 
         showExpirationNotification(expiryDate)
@@ -112,18 +108,18 @@ class TimerService : Service() {
 
     private fun vibrateAndSound() {
         val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val manager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+            val manager = getSystemService(VibratorManager::class.java)
             manager.defaultVibrator
         } else {
             @Suppress("DEPRECATION")
-            getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+            getSystemService(Vibrator::class.java)
         }
 
         val pattern = longArrayOf(0, 500, 200, 500, 200, 500, 200, 500, 200, 500)
         vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1))
 
         try {
-            val alarmUri: Uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+            val alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
                 ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
             val ringtone = RingtoneManager.getRingtone(this, alarmUri)
             ringtone?.play()
@@ -134,7 +130,7 @@ class TimerService : Service() {
         Thread {
             Thread.sleep(5000)
             try {
-                val alarmUri: Uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+                val alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
                     ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
                 val ringtone = RingtoneManager.getRingtone(this, alarmUri)
                 ringtone?.stop()
@@ -155,10 +151,10 @@ class TimerService : Service() {
 
         val notification = NotificationCompat.Builder(this, DeathTimerApp.CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_timer)
-            .setContentTitle("ВРЕМЯ ВЫШЛО!")
-            .setContentText("ТЫ МЕРТВ — $dateString")
+            .setContentTitle(getString(R.string.notif_time_up))
+            .setContentText(getString(R.string.notif_death_text, dateString))
             .setStyle(NotificationCompat.BigTextStyle()
-                .bigText("ТЫ МЕРТВ\nДата и время смерти: $dateString"))
+                .bigText(getString(R.string.notif_death_big, dateString)))
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setFullScreenIntent(pendingIntent, true)
@@ -167,7 +163,7 @@ class TimerService : Service() {
             .setVibrate(longArrayOf(0, 500, 200, 500, 200, 500))
             .build()
 
-        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         manager.notify(NOTIFICATION_ID, notification)
     }
 
@@ -184,8 +180,8 @@ class TimerService : Service() {
 
         val notification = NotificationCompat.Builder(this, DeathTimerApp.CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_timer)
-            .setContentTitle("ТЫ МЕРТВ")
-            .setContentText("Дата смерти: $dateString")
+            .setContentTitle(getString(R.string.death_message))
+            .setContentText(getString(R.string.death_date_format, dateString))
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setFullScreenIntent(pendingIntent, true)
@@ -193,7 +189,7 @@ class TimerService : Service() {
             .setAutoCancel(false)
             .build()
 
-        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         manager.notify(NOTIFICATION_ID + 1, notification)
     }
 
@@ -201,7 +197,7 @@ class TimerService : Service() {
         val hours = remainingSeconds / 3600
         val minutes = (remainingSeconds % 3600) / 60
         val seconds = remainingSeconds % 60
-        val timeString = String.format("%02d:%02d:%02d", hours, minutes, seconds)
+        val timeString = String.format(Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, seconds)
 
         val intent = Intent(this, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(
@@ -219,21 +215,21 @@ class TimerService : Service() {
 
         val notification = NotificationCompat.Builder(this, DeathTimerApp.CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_timer)
-            .setContentTitle("ДО КОНЦА ОСТАЛОСЬ")
+            .setContentTitle(getString(R.string.notif_time_left))
             .setContentText(timeString)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setContentIntent(pendingIntent)
-            .addAction(R.drawable.ic_stop, "СТОП", stopPendingIntent)
+            .addAction(R.drawable.ic_stop, getString(R.string.notif_stop), stopPendingIntent)
             .setOngoing(true)
             .build()
 
-        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         manager.notify(NOTIFICATION_ID, notification)
     }
 
     private fun acquireWakeLock() {
-        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+        val powerManager = getSystemService(POWER_SERVICE) as PowerManager
         wakeLock = powerManager.newWakeLock(
             PowerManager.PARTIAL_WAKE_LOCK,
             "DeathTimer::TimerWakeLock"
@@ -252,7 +248,7 @@ class TimerService : Service() {
         PreferenceManager.setRunning(this, false)
         PreferenceManager.setExpired(this, false)
 
-        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         manager.cancel(NOTIFICATION_ID)
         manager.cancel(NOTIFICATION_ID + 1)
     }

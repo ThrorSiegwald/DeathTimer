@@ -9,6 +9,5 @@
         <item name="colorOnSecondary">#FFFFFFFF</item>
         <item name="android:statusBarColor">#FF1A1A2E</item>
         <item name="android:navigationBarColor">#FF1A1A2E</item>
-        <item name="android:windowBackground">#FF1A1A2E</item>
     </style>
 </resources>
